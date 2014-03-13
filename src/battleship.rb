@@ -6,7 +6,7 @@ require 'json'
 json = JSON.parse(ARGV.join(' '))
 
 def valid_coordinates(x, y)
-  x > 0 && x < 8 && y > 0 && y <8
+  x >= 0 && x < 8 && y >= 0 && y < 8
 end
 
 def move_s(x, y)
@@ -14,16 +14,17 @@ def move_s(x, y)
 end
 
 def shootable(x, y, missed, hit)
-  valid_coordinates(x, y) && missed.include?(move_s(x+1, y)) && hit.include?(move_s(x+1, y))
+  valid_coordinates(x, y) && !missed.include?(move_s(x, y)) && !hit.include?(move_s(x, y))
 end
 
 def try_shoot(x, y, missed, hit)
   if shootable(x, y, missed, hit)
-    move = {'move' => move_s(x, y)}
+    move = {'move' => move_s(x, y), 'shoot' => 'smart'}
     puts JSON.generate move
     true
+  else
+    false
   end
-  false
 end
 
 def smart_shoot(json)
@@ -49,13 +50,13 @@ def smart_shoot(json)
 end
 
 def case_been_shooted(x, y, width, height, hit, missed)
-  for i in x..x+width
-    for j in y..y+height
+  (x..x+width-1).each { |i|
+    (y..y+height-1).each { |j|
       if hit.include?(move_s(i, j)) || missed.include?(move_s(i, j))
         return true
       end
-    end
-  end
+    }
+  }
 
   false
 end
@@ -64,14 +65,21 @@ def prob_shoot(json)
   width = 2
   height = 2
 
-  shooted = false
-  until width > 0 && height > 0
+  until width == 0 || height == 0
     i = 0
     while i < 8
       j = 0
       while j < 8
         unless case_been_shooted(i, j, width, height, json['hit'], json['missed'])
-          move = {'move' => move_s(i, j)}
+          if width == 2 && height == 2
+            if j == 2 || j == 6
+              move = {'move' => move_s(i+1, j), 'shoot' => 'probe'}
+            else
+              move = {'move' => move_s(i, j), 'shoot' => 'probe'}
+            end
+          else
+            move = {'move' => move_s(i, j), 'shoot' => 'probe'}
+          end
           puts JSON.generate move
           return true
         end
@@ -100,7 +108,7 @@ def random_shoot(json)
     move = move_s(x, y)
 
     unless json['hit'].include?(move) || json['missed'].include?(move)
-      res = {'move' => move}
+      res = {'move' => move, 'shoot' => 'random'}
 
       puts JSON.generate res
       shot_is_valid = true
@@ -109,7 +117,7 @@ def random_shoot(json)
 end
 
 if json['cmd'] == 'init'
-  puts "{\"2\":{\"point\":\"00\",\"orientation\":\"vertical\"},\"3\":{\"point\":\"22\",\"orientation\":\"vertical\"},\"4\":{\"point\":\"42\",\"orientation\":\"vertical\"},\"5\":{\"point\":\"37\",\"orientation\":\"horizontal\"}}"
+  puts "{\"2\":{\"point\":\"22\",\"orientation\":\"vertical\"},\"3\":{\"point\":\"54\",\"orientation\":\"vertical\"},\"4\":{\"point\":\"47\",\"orientation\":\"horizontal\"},\"5\":{\"point\":\"00\",\"orientation\":\"horizontal\"}}"
 else
 
   unless smart_shoot(json)
