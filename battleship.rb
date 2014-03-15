@@ -34,14 +34,6 @@ class Battleship
         return point.left_neighbor
       elsif !point.bottom_neighbor.nil? && point.bottom_neighbor.was_hit? && !point.top_neighbor.nil? && !point.top_neighbor.already_targeted?
         return point.top_neighbor
-      else
-        x_margin = point.x%2 == 0 ? max(1, smallest_ship_alive-1) : max(2, smallest_ship_alive-1)
-        y_margin = point.y%2 == 0 ? max(1, smallest_ship_alive-1) : max(2, smallest_ship_alive-1)
-
-        shootable_point = find_neighbor(point, x_margin, y_margin)
-        unless shootable_point.nil?
-          return shootable_point
-        end
       end
     end
 
