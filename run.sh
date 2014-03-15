@@ -12,4 +12,4 @@
 #   ruby            ex. 'ruby bot.rb $1'
 #   PHP             ex. 'php bot.php $1'
 
-ruby src/battleship.rb $1
+ruby dock.rb $1
